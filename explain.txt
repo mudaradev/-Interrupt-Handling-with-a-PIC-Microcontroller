@@ -1,0 +1,145 @@
+You're doing a great job trying to understand embedded systems! Let's break this down step by step using **very simple language** so you can understand both the **Proteus circuit diagram** and the **C code** (likely written for MPLAB X or MikroC).
+
+---
+
+### 🧠 1. **What is this project?**
+
+This is a simple **LED blinking program** using a **PIC16F628A microcontroller**. It also uses a **push button (switch)** to **trigger an interrupt**, which changes the LED behavior when the button is pressed.
+
+---
+
+### ⚙️ 2. **Circuit Explanation**
+
+Let’s identify the parts:
+
+#### 🔌 Microcontroller: `U1` – PIC16F628A
+
+* This chip runs your program and controls outputs.
+
+#### 💡 LEDs:
+
+* **D1 and D2** connected to `RA0` and `RA1`
+* **D3 and D4** connected to `RB1` and `RB2`
+* Controlled through code.
+
+#### 🛠️ Resistors:
+
+* **R1-R4** = 470 ohms: Limit current to LEDs so they don't burn out.
+* **R5** = 10k ohms: Pull-up resistor for the switch (avoids floating input).
+
+#### 🔘 Switch:
+
+* When pressed, it creates a low signal on pin `RB0` (interrupt pin).
+
+#### 🌡 Capacitor (C1 = 0.1µF):
+
+* Removes noise from the button press (called **debouncing**).
+
+---
+
+### 🧾 3. **Code Explanation**
+
+```c
+void main() {
+    TRISB = 0x01;     // RB0 = input (for switch), other RB pins = output
+    TRISA = 0x00;     // All RA pins = output (for LEDs)
+    CMCON = 0x07;     // Turn off comparators (for digital mode)
+    OPTION_REG = 0x00;// Enables pull-ups and external interrupt on falling edge
+    INTCON.GIE = 1;   // Enable global interrupts
+    INTCON.PEIE = 1;  // Enable peripheral interrupts (not strictly needed here)
+    INTCON.INTE = 1;  // Enable external interrupt (RB0)
+
+    while (1) {
+        PORTB.RB2 = 0;     // Turn off LED D4
+        PORTA.RA0 = 1;     // Turn on LED D1
+        PORTA.RA1 = 0;     // Turn off LED D2
+        delay_ms(100);
+        PORTA.RA0 = 0;     // Turn off LED D1
+        PORTA.RA1 = 1;     // Turn on LED D2
+        delay_ms(100);
+        INTCON.INTF = 0;   // Clear interrupt flag (just in case)
+    }
+}
+```
+
+### ⏰ What this does:
+
+* Alternately blinks **D1 and D2** on and off.
+* Keeps doing it **until you press the switch**.
+
+---
+
+### 🛎️ 4. **Interrupt Function**
+
+```c
+void interrupt() {
+    if (INTCON.INTF) {     // If interrupt occurred (button pressed)
+        PORTB.RB1 = 1;     // Turn on LED D3
+        PORTB.RB2 = 0;     // Turn off LED D4
+        delay_ms(100);
+        PORTB.RB1 = 0;     // Turn off LED D3
+        PORTB.RB2 = 1;     // Turn on LED D4
+        delay_ms(100);
+        INTCON.INTF = 0;   // Clear interrupt flag
+    }
+}
+```
+
+### 💥 What this does:
+
+* When you **press the button**:
+
+  * Stops blinking D1 and D2
+  * Blinks **D3 and D4 instead**
+  * After the delay, program **goes back to normal loop**
+
+---
+
+### ✅ Summary
+
+| Component    | Purpose                                                     |
+| ------------ | ----------------------------------------------------------- |
+| LEDs (D1-D4) | Show blinking pattern                                       |
+| R1-R4        | Protect LEDs                                                |
+| R5           | Pull-up resistor for button                                 |
+| C1           | Removes noise from button press                             |
+| Switch       | Triggers interrupt when pressed                             |
+| Code         | Blinks LEDs and handles switch press using an **interrupt** |
+
+---
+
+### 🧠 What You Learn
+
+* How to use **PORTA** and **PORTB**
+* How to **blink LEDs**
+* How to use a **switch** and **interrupts**
+* Importance of **resistors and capacitors** in digital circuits
+
+If you'd like, I can give you a flowchart or animation explanation too. Just ask!
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+void main() {
+    TRISB = 0x01;     // RB0 = input (for switch), other RB pins = output
+    TRISA = 0x00;     // All RA pins = output (for LEDs)
+    CMCON = 0x07;     // Turn off comparators (for digital mode)
+    OPTION_REG = 0x00;// Enables pull-ups and external interrupt on falling edge
+    INTCON.GIE = 1;   // Enable global interrupts
+    INTCON.PEIE = 1;  // Enable peripheral interrupts (not strictly needed here)
+    INTCON.INTE = 1;  // Enable external interrupt (RB0)
+
+    while (1) {
+        PORTB.RB2 = 0;     // Turn off LED D4
+        PORTA.RA0 = 1;     // Turn on LED D1
+        PORTA.RA1 = 0;     // Turn off LED D2
+        delay_ms(100);
+        PORTA.RA0 = 0;     // Turn off LED D1
+        PORTA.RA1 = 1;     // Turn on LED D2
+        delay_ms(100);
+        INTCON.INTF = 0;   // Clear interrupt flag (just in case)
+    }
+}
+
